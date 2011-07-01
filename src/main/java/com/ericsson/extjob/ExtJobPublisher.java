@@ -76,9 +76,9 @@ public class ExtJobPublisher extends Notifier {
         // Send the update to all subscribers
         if (subscriberList != null) {
 
-            String message = "<run>\n\t<log></log>\n\t<result>";
+            String message = "<run>\n\t<log>Log goes here</log>\n\t<result>";
 
-            if (build.getResult() == Result.SUCCESS) {
+            if (build.getResult().isBetterOrEqualTo(Result.SUCCESS)) {
                 message += "0</result>\n";
             } else {
                 message += "1</result>\n";

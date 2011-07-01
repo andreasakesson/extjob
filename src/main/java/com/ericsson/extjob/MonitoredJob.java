@@ -149,17 +149,6 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
     public MonitoredJob(ItemGroup parent, String name) {
         super(parent, name);
     }
-/*
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-
-        // Not sure if this function is ever called
-        if (keepAliveThread != null) {
-            keepAliveThread.terminate();
-        }
-    }
-*/
 
     public String getSubscriptionUrl() {
         return subscriptionUrl;
@@ -175,7 +164,6 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
             ssw.setStatusOk(true);
         else
             ssw.setStatusOk(false);
-
     }
 
     @Override
@@ -194,7 +182,7 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
     public List<Widget> getWidgets() {
         if (ssw == null)
             ssw = new SubscriptionStatusWidget();
-        ArrayList<Widget> r = new ArrayList<Widget>();
+        List<Widget> r = super.getWidgets();//new ArrayList<Widget>();
         r.add(ssw);
         return r;
     }
@@ -261,7 +249,6 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
         try {
             super.submit(req, rsp);
         } catch (IOException ex) {
-            //Logger.getLogger(XFPanelView.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         subscriptionUrl = req.getParameter("subscriptionURL");

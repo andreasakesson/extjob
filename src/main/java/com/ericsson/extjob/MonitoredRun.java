@@ -9,11 +9,13 @@ import hudson.Proc;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.tasks.junit.TestResult;
+import hudson.util.DecodingStream;
 import hudson.util.DualOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Reader;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -121,9 +123,35 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
             public Result run(BuildListener listener) throws Exception {
 
                 // Retreive the address string of the job, in order to fetch the XML (or JSON)
+                PrintStream logger = new PrintStream(new DecodingStream(listener.getLogger()));
+
+                XMLInputFactory xif = XMLInputFactory.newInstance();
+                XMLStreamReader p = xif.createXMLStreamReader(in);
+
+                p.nextTag();    // get to the <run>
+                p.nextTag();    // get to the <log>
+
+                charset=p.getAttributeValue(null,"content-encoding");
+                while(p.next()!= XMLStreamReader.END_ELEMENT) {
+                    int type = p.getEventType();
+                    if(type == XMLStreamReader.CHARACTERS || type == XMLStreamReader.CDATA)
+                        logger.print(p.getText());
+                }
+                p.nextTag(); // get to <result>
 
 
-                Result r = Result.SUCCESS; // Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
+
+                Result r = Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
+
+                p.nextTag();  // get to <duration> (optional)
+                if(p.getEventType() == XMLStreamReader.START_ELEMENT
+                && p.getLocalName().equals("duration")) {
+                    duration[0] = Long.parseLong(elementText(p));
+                }
+
+
+
+                //Result r = Result.SUCCESS; // Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
 
                
 

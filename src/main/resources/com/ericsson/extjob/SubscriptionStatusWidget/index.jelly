@@ -1,0 +1,16 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+	<l:pane width="1" title="Subscription status" id="subscriptionStatusWidget">
+		<tr>
+			<td>
+				<j:if test="${it.statusOk}">
+				<img width="16" height="16" src="${imagesURL}/16x16/blue.png" alt="Status OK"/>
+					Subscription OK!
+				</j:if>
+				<j:if test="${!it.statusOk}">
+				<img width="16" height="16" src="${imagesURL}/16x16/red.png" alt="Status failed"/>
+					Subscription failed.
+				</j:if>
+			</td>
+		</tr>
+	</l:pane>
+</j:jelly>

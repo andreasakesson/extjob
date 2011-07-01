@@ -25,6 +25,7 @@ public class ItemListenerImpl
 
     @Override
     public void onLoaded() {
+        System.out.println("On load..");
         for (AbstractProject<?, ?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
             addShelveProjectProperty(project);
         }
@@ -32,6 +33,7 @@ public class ItemListenerImpl
 
     @Override
     public void onCreated(Item item) {
+        System.out.println("On created");
         if (item instanceof AbstractProject) {
             AbstractProject project = (AbstractProject) item;
             addShelveProjectProperty(project);
@@ -41,8 +43,10 @@ public class ItemListenerImpl
     private void addShelveProjectProperty(AbstractProject<?, ?> project) {
         try {
             if (project.getProperty(SubscriptionProperty.class) == null) {
+                System.out.println("Add prop");
                 project.addProperty(new SubscriptionProperty());
             }
+            System.out.println("Done");
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Failed to persist " + project, e);
         }

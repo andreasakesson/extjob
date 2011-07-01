@@ -1,16 +1,16 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <l:layout title="Shelve Project">
+    <l:layout title="Project subscribers">
 
         <st:include page="sidepanel.jelly" it="${it.project}"/>
 
         <l:main-panel>
             <h1>Subscribers</h1>
 
-	    <table>
+	    <table class="pane sortable">
 	    	<tr>
-			<td>Address</td>
-			<td>Last heartbeat</td>
+			<td class="pane-header">${%Address}</td>
+			<td class="pane-header">${%Last heartbeat}</td>
 		</tr>
 		
 		<j:set var="subscribers" value="${it.getSubscribers()}" />
@@ -19,8 +19,8 @@
 			<j:set var="heartbeat"
 			value="${subscriber.lastHeartbeat}" />
 			<tr>
-				<td>${subscriber.subscriber}</td>
-				<td> ${heartbeat.get(heartbeat.DAY_OF_MONTH)}.${heartbeat.get(heartbeat.MONTH)+1}.${heartbeat.get(heartbeat.YEAR)}
+				<td class="pane">${subscriber.subscriber}</td>
+				<td class="pane"> ${heartbeat.get(heartbeat.DAY_OF_MONTH)}.${heartbeat.get(heartbeat.MONTH)+1}.${heartbeat.get(heartbeat.YEAR)}
 				    ${heartbeat.get(heartbeat.HOUR_OF_DAY)}:${heartbeat.get(heartbeat.MINUTE)}</td>
 			</tr>
 		</j:forEach>

@@ -59,15 +59,11 @@ public class SubscriptionCollector
     }
 
     public String getIconFileName() {
-        if (Hudson.getInstance().hasPermission(Permission.DELETE)) {
-            return null;
-        } else {
-            return null;
-        }
+        return "fingerprint.png";
     }
 
     public String getDisplayName() {
-        return "Subscription Collector";
+        return "Subscriptions";
     }
 
     public String getUrlName() {
