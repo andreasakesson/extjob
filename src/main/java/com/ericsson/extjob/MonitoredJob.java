@@ -10,16 +10,12 @@ import hudson.model.ItemGroup;
 import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
 import hudson.model.ViewJob;
+import hudson.triggers.Trigger;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.widgets.Widget;
 import java.io.File;
 import java.io.IOException;
 //import java.lang.reflect.Constructor;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -63,84 +59,17 @@ import org.kohsuke.stapler.StaplerResponse;
  */
 public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements TopLevelItem {
 
-    private static final int THREAD_STATUS_OK = 0;
-    private static final int THREAD_STATUS_ERROR = 1;
+    public static final int SUBSCRIPTION_STATUS_OK = 0;
+    public static final int SUBSCRIPTION_STATUS_ERROR = 1;
+    public static final int SUBSCRIPTION_STATUS_INVALID_URL = 2;
+    public static final int SUBSCRIPTION_STATUS_NOT_SET = 3;
+    public static final int SUBSCRIPTION_STATUS_INVALID_RESPONSE = 4;
+    
     private String subscriptionUrl = null;
-    private transient int threadStatus = THREAD_STATUS_OK;
+    private transient int threadStatus = SUBSCRIPTION_STATUS_NOT_SET;
     private transient SubscriptionStatusWidget ssw = null;
+    private transient MonitorPeriodicWork keepAliveThread = null;
 
-    /**
-     * Threading class which refreshes the keepalive of the subscription
-     */
-    private class SubscriptionKeepAlive implements Runnable {
-
-        public static final int KEEPALIVE_TIME = 2000; //1000*60*5; // 5 minutes
-        private transient MonitoredJob parentJob = null;
-        private transient volatile boolean isRunning = true;
-
-        SubscriptionKeepAlive(MonitoredJob parentJob) {
-            
-            this.parentJob = parentJob;
-            if (this.parentJob == null)
-                isRunning = false;
-        }
-
-        void terminate() {
-            isRunning = false;
-        }
-
-        @Override
-        public void run() {
-
-                while (isRunning) {
-                    String subscriptionURL = parentJob.getSubscriptionUrl();
-
-                    if (subscriptionURL != null) {
-                        URL url = null;
-
-                        try {
-                            url = new URL(parentJob.getSubscriptionUrl() + "subscription/subscribe"); // subscriber already has a tailing slash
-                        } catch (MalformedURLException e) {
-                            System.out.println("Erronous subscription URL (" + parentJob.getSubscriptionUrl() + "subscription/subscribe )");
-                            parentJob.reportThreadStatus(THREAD_STATUS_ERROR);
-                            return;
-                        }
-
-                        try {
-                            
-                            HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
-                            httpCon.setDoOutput(true);
-                            httpCon.setRequestMethod("POST");
-                            OutputStreamWriter out = new OutputStreamWriter(
-                                    httpCon.getOutputStream());
-                            out.write(Hudson.getInstance().getRootUrl() + parentJob.getUrl());
-                            out.flush();
-
-                            // We got an error of some kind..
-                            if (httpCon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                                parentJob.reportThreadStatus(THREAD_STATUS_ERROR);
-                                System.out.println("Error???");
-                            } else {
-                                parentJob.reportThreadStatus(THREAD_STATUS_OK);
-                            }
-
-                            out.close();
-
-                        } catch (Exception e) {
-                            System.out.println("Unable to connect to server: " + e.getMessage());
-                            parentJob.reportThreadStatus(THREAD_STATUS_ERROR);
-                        }
-
-
-                    }
-                    try {
-                        Thread.sleep(KEEPALIVE_TIME);
-                    } catch (InterruptedException ex) {}
-                }
-            
-        }
-    }
-    private transient SubscriptionKeepAlive keepAliveThread = null;
 
     public MonitoredJob(String name) {
         this(Hudson.getInstance(), name);
@@ -154,39 +83,43 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
         return subscriptionUrl;
     }
 
-    private void reportThreadStatus(int status) {
+    public void reportThreadStatus(int status) {
         threadStatus = status;
 
-        if (ssw == null)
+        if (ssw == null) {
             ssw = new SubscriptionStatusWidget();
+        }
 
-        if (status == THREAD_STATUS_OK)
+        if (status == SUBSCRIPTION_STATUS_OK) {
             ssw.setStatusOk(true);
-        else
+        } else {
             ssw.setStatusOk(false);
-    }
-
-    @Override
-    public void onLoad(ItemGroup<? extends Item> parent, String name)
-                                                    throws IOException {
-        super.onLoad(parent, name);
-        if (subscriptionUrl != null) {
-            keepAliveThread = new SubscriptionKeepAlive(this);
-            Thread t = new Thread(keepAliveThread);
-            t.setName(this.getDisplayName() + " update thread");
-            t.start();
         }
     }
 
     @Override
+    public void onLoad(ItemGroup<? extends Item> parent, String name)
+            throws IOException {
+        super.onLoad(parent, name);
+
+        // Initialize the periodic job
+        //if (subscriptionUrl != null) {
+            keepAliveThread = new MonitorPeriodicWork(this);
+            Trigger.timer.scheduleAtFixedRate(keepAliveThread, 0, 5000);
+        //}
+    }
+
+    @Override
     public List<Widget> getWidgets() {
-        if (ssw == null)
+
+        // Create the widget if needed, then publish it
+        if (ssw == null) {
             ssw = new SubscriptionStatusWidget();
+        }
         List<Widget> r = super.getWidgets();//new ArrayList<Widget>();
         r.add(ssw);
         return r;
     }
-
 
     @Override
     protected void reload() {
@@ -260,19 +193,19 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
             }
         }
 
-        //System.out.println("Got job URL " + subscriptionUrl);
         // Start the update thread - kill previous one if needed
         if (keepAliveThread != null) {
-            keepAliveThread.terminate();
+            keepAliveThread.cancel();
             keepAliveThread = null;
         }
 
         //System.out.println("Monitored job " + this.getDisplayName() + " trying to subscripe to " + subscriptionUrl);
 
-        keepAliveThread = new SubscriptionKeepAlive(this);
-        Thread t = new Thread(keepAliveThread);
-        t.setName(this.getDisplayName() + " update thread");
-        t.start();
+        keepAliveThread = new MonitorPeriodicWork(this);
+        Trigger.timer.scheduleAtFixedRate(keepAliveThread, 0, 5000);
+        //Thread t = new Thread(keepAliveThread);
+        //t.setName(this.getDisplayName() + " update thread");
+        //t.start();
 
         save();
 

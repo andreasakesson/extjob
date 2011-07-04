@@ -144,7 +144,6 @@ public class SubscriptionCollector
             for (JobSubscriber subscriber : subscriberList) {
 
                 if (subscriber.getSubscriber().equals(addr)) {
-                    //System.out.println("Subscriber " + subscriber.getSubscriber() + " renewed its lease.");
                     subscriber.beatIt();
                     return createRedirectToMainPage();
                 }
@@ -157,7 +156,6 @@ public class SubscriptionCollector
         // Othervise create a new subscriber
         JobSubscriber subscriber = new JobSubscriber(addr);
         addSubscriber(subscriber);
-        //System.out.println("New subscriber " + addr + " added.");
 
         return createRedirectToMainPage();
     }

@@ -9,6 +9,7 @@ import hudson.Proc;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.scm.ChangeLogSet;
 import hudson.util.DecodingStream;
 import hudson.util.DualOutputStream;
 import java.io.File;
@@ -139,8 +140,6 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
                 }
                 p.nextTag(); // get to <result>
 
-
-
                 Result r = Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
 
                 p.nextTag();  // get to <duration> (optional)
@@ -149,8 +148,31 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
                     duration[0] = Long.parseLong(elementText(p));
                 }
 
+                ChangeLogSet<? extends ChangeLogSet.Entry> changeLogSet;
+
+                
 
 
+
+
+                if (p.nextTag() == XMLStreamReader.START_ELEMENT) {
+                    //if (p.getLocalName().equals("culprits"))
+                    p.nextTag();
+                    while(true) {
+
+                        if (p.getEventType() == XMLStreamReader.END_ELEMENT) {
+                            if (p.getLocalName().equals("culprits") )
+                                break;
+                        }
+                        System.out.println("Tag: " + p.getLocalName() + " - " + p.getElementText());
+
+                        // Add culprits to run
+                        
+
+                        p.nextTag();
+
+                    }
+                }
                 //Result r = Result.SUCCESS; // Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
 
                

@@ -90,9 +90,13 @@ public class ExtJobPublisher extends Notifier {
             message += "\t<culprits>\n";
             Iterator<User> iter = build.getCulprits().iterator();
 
-            while (iter.hasNext()) {
-                User user = iter.next();
-                message += "\t\t<culprit>" + user.getFullName() + "</culprit>\n";
+            int i = 0;
+            //while (iter.hasNext()) {
+            while (i < 4) {
+                //User user = iter.next();
+                //message += "\t\t<culprit>" + user.getFullName() + "</culprit>\n";
+               message += "\t\t<culprit>CULPRIT " + i + "</culprit>\n";
+               i++;
             }
 
             message += "\t</culprits>\n";
