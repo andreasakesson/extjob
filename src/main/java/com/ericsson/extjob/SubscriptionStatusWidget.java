@@ -1,27 +1,21 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
+/******************************************************************************
+ * External Job Monitor
+ * Copyright Ericsson AB 2011. All Rights Reserved.
+ *
+ * Software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND,
+ * either express or implied.
+ *
+ ******************************************************************************/
 package com.ericsson.extjob;
 
-import hudson.Extension;
 import hudson.widgets.Widget;
 
-/**
- *
- * @author eanakes
- */
-
-
-//@Extension
 public class SubscriptionStatusWidget extends Widget {
 
     private String errorMsg;
     private boolean statusOk;
 
     public SubscriptionStatusWidget() {
-        
     }
 
     @Override
@@ -44,5 +38,4 @@ public class SubscriptionStatusWidget extends Widget {
     public void setStatusOk(boolean status) {
         statusOk = status;
     }
-
 }

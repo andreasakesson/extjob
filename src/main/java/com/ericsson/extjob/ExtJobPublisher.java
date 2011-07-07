@@ -1,7 +1,11 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+/******************************************************************************
+ * External Job Monitor
+ * Copyright Ericsson AB 2011. All Rights Reserved.
+ *
+ * Software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND,
+ * either express or implied.
+ *
+ ******************************************************************************/
 package com.ericsson.extjob;
 
 import hudson.Extension;
@@ -25,10 +29,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- *
- * @author eanakes
- */
 public class ExtJobPublisher extends Notifier {
 
     public static final int SUBSCRIPTION_LEASE = 1000 * 60 * 10; // 10 minutes
@@ -95,8 +95,8 @@ public class ExtJobPublisher extends Notifier {
             while (i < 4) {
                 //User user = iter.next();
                 //message += "\t\t<culprit>" + user.getFullName() + "</culprit>\n";
-               message += "\t\t<culprit>CULPRIT " + i + "</culprit>\n";
-               i++;
+                message += "\t\t<culprit>CULPRIT " + i + "</culprit>\n";
+                i++;
             }
 
             message += "\t</culprits>\n";
@@ -138,7 +138,7 @@ public class ExtJobPublisher extends Notifier {
 
         return true;
     }
-    
+
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();

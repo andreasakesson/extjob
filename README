@@ -1,0 +1,10 @@
+/******************************************************************************
+ * External Job Monitor
+ * Copyright Ericsson AB 2011. All Rights Reserved.
+ *
+ * Software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND,
+ * either express or implied.
+ *
+ ******************************************************************************/
+ 
+ This Jenkins plugin allows you to monitor Jenkins jobs on other Jenkins instances.

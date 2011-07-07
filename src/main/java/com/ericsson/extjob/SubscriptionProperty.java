@@ -1,7 +1,11 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+/******************************************************************************
+ * External Job Monitor
+ * Copyright Ericsson AB 2011. All Rights Reserved.
+ *
+ * Software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND,
+ * either express or implied.
+ *
+ ******************************************************************************/
 package com.ericsson.extjob;
 
 import hudson.Extension;
@@ -18,10 +22,6 @@ import java.util.Collections;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
-/**
- *
- * @author eanakes
- */
 public class SubscriptionProperty
         extends JobProperty<AbstractProject<?, ?>> {
 
@@ -29,21 +29,12 @@ public class SubscriptionProperty
     public Collection<? extends Action> getJobActions(AbstractProject<?, ?> job) {
 
         return Collections.<Action>singleton(new SubscriptionCollector(job));
-        /*
-        final List<Action> actions = new LinkedList<Action>();
-        actions.addAll(job.getActions());
-        actions.add(new SubscriptionCollector(job));
-        System.out.println("Actions!!");
-        return actions;
-         * 
-         */
     }
 
     @Override
     public JobProperty<?> reconfigure(org.kohsuke.stapler.StaplerRequest req,
-                                  net.sf.json.JSONObject form)
-                           throws Descriptor.FormException {
-        System.out.println("reconfigure!");
+            net.sf.json.JSONObject form)
+            throws Descriptor.FormException {
         return this;
     }
 
@@ -54,12 +45,11 @@ public class SubscriptionProperty
 
         @Override
         public boolean isApplicable(Class<? extends Job> jobType) {
-            System.out.println("Is applicable? " + TopLevelItem.class.isAssignableFrom(jobType) + " jobType = " + jobType);
             return TopLevelItem.class.isAssignableFrom(jobType);
         }
 
         public String getDisplayName() {
-            return "Display name...";
+            return "Subscription property";
         }
 
         @Override

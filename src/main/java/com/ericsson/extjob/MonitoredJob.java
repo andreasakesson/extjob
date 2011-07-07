@@ -1,3 +1,11 @@
+/******************************************************************************
+ * External Job Monitor
+ * Copyright Ericsson AB 2011. All Rights Reserved.
+ *
+ * Software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND,
+ * either express or implied.
+ *
+ ******************************************************************************/
 package com.ericsson.extjob;
 
 import hudson.model.RunMap.Constructor;
@@ -15,48 +23,12 @@ import hudson.util.AlternativeUiTextProvider;
 import hudson.widgets.Widget;
 import java.io.File;
 import java.io.IOException;
-//import java.lang.reflect.Constructor;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * The MIT License
- *
- * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, id:cactusman
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-/**
- * Job that runs outside Hudson whose result is submitted to Hudson
- * (either via web interface, or simply by placing files on the file system,
- * for compatibility.)
- *
- * @author Kohsuke Kawaguchi
- */
 public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements TopLevelItem {
 
     public static final int SUBSCRIPTION_STATUS_OK = 0;
@@ -64,12 +36,12 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
     public static final int SUBSCRIPTION_STATUS_INVALID_URL = 2;
     public static final int SUBSCRIPTION_STATUS_NOT_SET = 3;
     public static final int SUBSCRIPTION_STATUS_INVALID_RESPONSE = 4;
-    
+
+
     private String subscriptionUrl = null;
     private transient int threadStatus = SUBSCRIPTION_STATUS_NOT_SET;
     private transient SubscriptionStatusWidget ssw = null;
     private transient MonitorPeriodicWork keepAliveThread = null;
-
 
     public MonitoredJob(String name) {
         this(Hudson.getInstance(), name);
@@ -84,8 +56,10 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
     }
 
     public void reportThreadStatus(int status) {
+
         threadStatus = status;
 
+        // Create widget if needed
         if (ssw == null) {
             ssw = new SubscriptionStatusWidget();
         }
@@ -102,11 +76,9 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
             throws IOException {
         super.onLoad(parent, name);
 
-        // Initialize the periodic job
-        //if (subscriptionUrl != null) {
-            keepAliveThread = new MonitorPeriodicWork(this);
-            Trigger.timer.scheduleAtFixedRate(keepAliveThread, 0, 5000);
-        //}
+        keepAliveThread = new MonitorPeriodicWork(this);
+        Trigger.timer.scheduleAtFixedRate(keepAliveThread, 0, 5000);
+
     }
 
     @Override
@@ -116,7 +88,7 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
         if (ssw == null) {
             ssw = new SubscriptionStatusWidget();
         }
-        List<Widget> r = super.getWidgets();//new ArrayList<Widget>();
+        List<Widget> r = super.getWidgets();
         r.add(ssw);
         return r;
     }
@@ -199,13 +171,9 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
             keepAliveThread = null;
         }
 
-        //System.out.println("Monitored job " + this.getDisplayName() + " trying to subscripe to " + subscriptionUrl);
-
         keepAliveThread = new MonitorPeriodicWork(this);
         Trigger.timer.scheduleAtFixedRate(keepAliveThread, 0, 5000);
-        //Thread t = new Thread(keepAliveThread);
-        //t.setName(this.getDisplayName() + " update thread");
-        //t.start();
+
 
         save();
 
@@ -215,13 +183,13 @@ public class MonitoredJob extends ViewJob<MonitoredJob, MonitoredRun> implements
 
     @Override
     public String getPronoun() {
-        return AlternativeUiTextProvider.get(PRONOUN, this, "Monitored job");//Messages.MonitoredJob_Pronoun());
+        return AlternativeUiTextProvider.get(PRONOUN, this, "Monitored job");
     }
 
     public static final class DescriptorImpl extends TopLevelItemDescriptor {
 
         public String getDisplayName() {
-            return "Monitor an external Jenkins job"; //Messages.MonitoredJob_DisplayName();
+            return "Monitor an external Jenkins job";
         }
 
         public MonitoredJob newInstance(ItemGroup parent, String name) {

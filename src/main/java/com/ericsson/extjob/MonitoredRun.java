@@ -1,15 +1,17 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
+/******************************************************************************
+ * External Job Monitor
+ * Copyright Ericsson AB 2011. All Rights Reserved.
+ *
+ * Software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND,
+ * either express or implied.
+ *
+ ******************************************************************************/
 package com.ericsson.extjob;
 
 import hudson.Proc;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.scm.ChangeLogSet;
 import hudson.util.DecodingStream;
 import hudson.util.DualOutputStream;
 import java.io.File;
@@ -20,47 +22,13 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-/**
- *
- * @author eanakes
- */
-public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
-/*
- * The MIT License
- *
- * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
-
-/**
- * {@link Run} for {@link ExternalJob}.
- *
- * @author Kohsuke Kawaguchi
- */
+public class MonitoredRun extends Run<MonitoredJob, MonitoredRun> {
 
     /**
      * Loads a run from a log file.
      */
     MonitoredRun(MonitoredJob owner, File runDir) throws IOException {
-        super(owner,runDir);
+        super(owner, runDir);
     }
 
     /**
@@ -76,9 +44,10 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
      */
     public void run(final String[] cmd) {
         run(new Runner() {
+
             public Result run(BuildListener listener) throws Exception {
-                Proc proc = new Proc.LocalProc(cmd,getEnvironment(listener),System.in,new DualOutputStream(System.out,listener.getLogger()));
-                return proc.join()==0?Result.SUCCESS:Result.FAILURE;
+                Proc proc = new Proc.LocalProc(cmd, getEnvironment(listener), System.in, new DualOutputStream(System.out, listener.getLogger()));
+                return proc.join() == 0 ? Result.SUCCESS : Result.FAILURE;
             }
 
             public void post(BuildListener listener) {
@@ -110,14 +79,16 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
     public void acceptRemoteSubmission(final Reader in) throws IOException {
         final long[] duration = new long[1];
         run(new Runner() {
+
             private String elementText(XMLStreamReader r) throws XMLStreamException {
                 StringBuilder buf = new StringBuilder();
-                while(true) {
+                while (true) {
                     int type = r.next();
-                    if(type == XMLStreamReader.CHARACTERS || type == XMLStreamReader.CDATA)
+                    if (type == XMLStreamReader.CHARACTERS || type == XMLStreamReader.CDATA) {
                         buf.append(r.getTextCharacters(), r.getTextStart(), r.getTextLength());
-                    else
+                    } else {
                         return buf.toString();
+                    }
                 }
             }
 
@@ -132,51 +103,42 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
                 p.nextTag();    // get to the <run>
                 p.nextTag();    // get to the <log>
 
-                charset=p.getAttributeValue(null,"content-encoding");
-                while(p.next()!= XMLStreamReader.END_ELEMENT) {
+                charset = p.getAttributeValue(null, "content-encoding");
+                while (p.next() != XMLStreamReader.END_ELEMENT) {
                     int type = p.getEventType();
-                    if(type == XMLStreamReader.CHARACTERS || type == XMLStreamReader.CDATA)
+                    if (type == XMLStreamReader.CHARACTERS || type == XMLStreamReader.CDATA) {
                         logger.print(p.getText());
+                    }
                 }
                 p.nextTag(); // get to <result>
 
-                Result r = Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
+                Result r = Integer.parseInt(elementText(p)) == 0 ? Result.SUCCESS : Result.FAILURE;
 
                 p.nextTag();  // get to <duration> (optional)
-                if(p.getEventType() == XMLStreamReader.START_ELEMENT
-                && p.getLocalName().equals("duration")) {
+                if (p.getEventType() == XMLStreamReader.START_ELEMENT
+                        && p.getLocalName().equals("duration")) {
                     duration[0] = Long.parseLong(elementText(p));
                 }
-
-                ChangeLogSet<? extends ChangeLogSet.Entry> changeLogSet;
-
-                
-
-
 
 
                 if (p.nextTag() == XMLStreamReader.START_ELEMENT) {
                     //if (p.getLocalName().equals("culprits"))
                     p.nextTag();
-                    while(true) {
+                    while (true) {
 
                         if (p.getEventType() == XMLStreamReader.END_ELEMENT) {
-                            if (p.getLocalName().equals("culprits") )
+                            if (p.getLocalName().equals("culprits")) {
                                 break;
+                            }
                         }
                         System.out.println("Tag: " + p.getLocalName() + " - " + p.getElementText());
 
                         // Add culprits to run
-                        
+
 
                         p.nextTag();
-
                     }
                 }
-                //Result r = Result.SUCCESS; // Integer.parseInt(elementText(p))==0?Result.SUCCESS:Result.FAILURE;
-
-               
-
                 return r;
             }
 
@@ -189,11 +151,10 @@ public class MonitoredRun extends Run<MonitoredJob,MonitoredRun> {
             }
         });
 
-        if(duration[0]!=0) {
+        if (duration[0] != 0) {
             super.duration = duration[0];
             // save the updated duration
             save();
         }
     }
-
 }
